@@ -1,0 +1,37 @@
+// Models for Discord bot
+
+generator kysely {
+  provider = "prisma-kysely"
+
+  output       = "../src/db"
+  fileName     = "types.ts"
+  enumFileName = "enums.ts"
+}
+
+/// We don't use it here, but it's required by Prisma
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Subscription {
+  /// Discord channel ID
+  chan    String   @id
+  /// Discord user ID
+  user    String
+  /// Discord guild ID
+  guild   String
+  created DateTime @default(now())
+}
+
+model History {
+  /// Earthquake ID
+  identifier String @id
+  /// Report number
+  number     Int
+  time       String
+  lat        Float
+  lon        Float
+  depth      Int
+  magnitude  Float
+}

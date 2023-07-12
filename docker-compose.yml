@@ -1,0 +1,15 @@
+version: "3.9"
+name: earthquake-bot
+
+services:
+    bot:
+        build:
+            context: .
+            target: bot
+        image: jacoblincool/earthquake-bot
+        container_name: earthquake-bot
+        env_file:
+            - .env
+        volumes:
+            - ./data:/app/data
+        restart: unless-stopped
