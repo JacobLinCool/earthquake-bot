@@ -1,4 +1,3 @@
-import { EmbedBuilder } from "discord.js";
 import { connect } from "mqtt";
 import { client } from "../client";
 import { MQTT_URL, MQTT_USERNAME, MQTT_PASSWORD, MQTT_TOPIC } from "../config";
@@ -36,37 +35,50 @@ export function MQTT() {
 				const payload: Payload = JSON.parse(data.cmd);
 				log("received", payload);
 
-				const has = await db
+				const exists = await db
 					.selectFrom("History")
 					.where("History.identifier", "=", payload.identifier)
 					.select("History.identifier")
 					.executeTakeFirst();
 
-				if (!has) {
+				if (!exists) {
 					const subscriptions = await db
 						.selectFrom("Subscription")
 						.select("Subscription.chan")
 						.execute();
+
+					const embed = new EarthquakeEmbed({
+						id: payload.identifier,
+						time: payload.originTime,
+						lat: payload.epicenterLat,
+						lon: payload.epicenterLon,
+						depth: payload.depth,
+						magnitude: payload.magnitude,
+					});
+
 					subscriptions.map(async (sub) => {
-						return client.channels.fetch(sub.chan).then((chan) => {
-							if (!chan || !chan.isTextBased()) {
-								return;
-							}
+						const log = debug(`notification:${payload.identifier}:${sub.chan}`);
+						log.enabled = true;
+						log(
+							"dilivering notification for",
+							payload.identifier,
+							"to",
+							sub.chan,
+							"...",
+						);
 
-							const embed = new EarthquakeEmbed({
-								id: payload.identifier,
-								time: payload.originTime,
-								lat: payload.epicenterLat,
-								lon: payload.epicenterLon,
-								depth: payload.depth,
-								magnitude: payload.magnitude,
-							});
+						const chan = await client.channels.fetch(sub.chan);
+						if (!chan || !chan.isTextBased()) {
+							log("cannot find channel to send notification", sub.chan);
+							return;
+						}
 
-							chan.send({
-								content: `**地震速報**`,
-								embeds: [embed],
-							});
+						await chan.send({
+							content: `**地震速報**`,
+							embeds: [embed],
 						});
+
+						log("delivered notification for", payload.identifier, "to", sub.chan);
 					});
 				}
 
