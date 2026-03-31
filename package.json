@@ -18,7 +18,7 @@
 		"debug": "^4.3.4",
 		"discord.js": "^14.11.0",
 		"dotenv": "^16.3.1",
-		"kysely": "^0.26.1",
+		"kysely": "^0.28.0",
 		"mqtt": "^4.3.7",
 		"prisma-kysely": "^1.5.0"
 	},
